@@ -3,19 +3,13 @@
 #include <time.h>
 #include <string.h>
 
-struct person {
+struct person {//Almacena información principal
 	int record;
 	char name[10];
 	int birth_year;
 	int birth_month;
 	int birth_day;
 	struct person *nextPerson;
-};
-
-struct count{
-	int current_year;
-	int current_month;
-	int current_day;
 };
 
 struct current{
@@ -30,24 +24,8 @@ struct next_birthday{
 	int age;
 };
 
-/*
-struct tm *localtime(const time_t *timer)
-
-struct tm {
-   int tm_sec;         // seconds,  range 0 to 59          
-   int tm_min;         // minutes, range 0 to 59           
-   int tm_hour;        // hours, range 0 to 23             
-   int tm_mday;        // day of the month, range 1 to 31  
-   int tm_mon;         // month, range 0 to 11             
-   int tm_year;        // The number of years since 1900   
-   int tm_wday;        // day of the week, range 0 to 6    
-   int tm_yday;        // day in the year, range 0 to 365  
-   int tm_isdst;       // daylight saving time             	
-};
-*/
 
 typedef struct person s_person;
-typedef struct count s_count;
 typedef struct next_birthday s_nbirth;
 typedef struct current s_current;
 
