@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#define ERR_INPUT -1
 
 struct person {//Almacena información principal
 	int record;
-	char name[10];
+	char name[20];
 	int birth_year;
 	int birth_month;
 	int birth_day;
@@ -29,10 +30,13 @@ typedef struct person s_person;
 typedef struct next_birthday s_nbirth;
 typedef struct current s_current;
 
+
 void insert_person (s_person **Head, char name[], int year, int month, int day);
-void get_person (s_person **);
+int get_person (s_person **);
 void assign_current_day (s_current *current_date, struct tm m_tyme); 
 void get_nex_birth(int record, s_person *person,s_current, s_nbirth *next_birth); 
+int validate_num(const char *num, int min, int max);
+char* validate_str(char *array, int size);
 
 
 int main (void){
@@ -44,8 +48,10 @@ s_nbirth N_birth;
 int tyear, tmonth, tday;
 char tname[20] = {0};
 int conf=0;
+int entradas;
 int option = 0;
-unsigned int sub;
+int sub;
+char user_input[80] = {'\0'};
 
 time_t t = time(NULL);
 struct tm my_time = *localtime(&t);
@@ -53,38 +59,62 @@ assign_current_day(&S_current, my_time);
 
 
 do {
+	printf("\n\n");
 	puts("    **MENU**");
 	puts("1) Ingresar nodo");
 	puts("2) Calcular nodo");
-	puts("3) Salir") ;
-	scanf("%d", &option);
-	memset(tname, '\0', sizeof(tname));
+	puts("3) Salir");
+	
+	memset(user_input, '\0', sizeof(tname));//Limpia string
+	scanf("%s", user_input);
+	option = validate_num(user_input, 1, 3);
 
 	switch(option){
 		case 1:	printf("Nombre: ");
-			scanf("%7s", tname);
-			printf("Anio: ");
-			scanf("%d", &tyear);
-			printf("Mes: ");
-			scanf("%d", &tmonth);
-			printf("Dia: ");
-			scanf("%d", &tday);
-			insert_person(&s_perHeadNode, tname, tyear, tmonth, tday);
+			memset(user_input, '\0', sizeof(user_input));//Limpia string
+			scanf("%s", tname);
+			
+			printf("Anio de nacimiento (1900-%d): ", my_time.tm_year+1900);
+			memset(user_input, '\0', sizeof(user_input));//Limpia string
+			scanf("%s", user_input);
+			if((tyear = validate_num(user_input, 1900, my_time.tm_year+1900)) == ERR_INPUT)
+				break;
+
+			printf("Mes de nacimiento (1-12): ");
+			memset(user_input, '\0', sizeof(user_input));
+			scanf("%s", user_input);
+			if((tmonth = validate_num(user_input, 1, 12)) == ERR_INPUT)
+				break;
+
+			printf("Dia de nacimiento(1-30): ");
+			memset(user_input, '\0', sizeof(user_input));
+			scanf("%s", user_input);
+			if((tday = validate_num(user_input, 1, (tyear==my_time.tm_year+1900&&tmonth==my_time.tm_mon+1)?			my_time.tm_mday:30))==ERR_INPUT)
+				break;
+
+			insert_person(&s_perHeadNode, tname, tyear, tmonth, tday);//Almacena los datos ingresados
 			break;
 
 		case 2: puts("");
-			get_person (&s_perHeadNode);
+			if(!(entradas = get_person(&s_perHeadNode))){//Lista los registros almacenados y retorna el num de entradas
+				printf("No hay registros en la lista\n");
+				break;
+			}
+
 			printf("Ingrese el subindice a revisar: ");
-			scanf("%d", &sub);
-			puts("");
-			get_nex_birth(sub, s_perHeadNode,S_current, &N_birth);
+			memset(user_input, '\0', sizeof(user_input));
+			scanf("%s", user_input);
+			if((sub = validate_num(user_input, 1, entradas))==ERR_INPUT){
+				break;
+			}
 			
+			get_nex_birth(sub, s_perHeadNode,S_current, &N_birth);			
 			break;	
 
-		case 3:	//Exit
+		case 3:	puts("Hasta luego");
 			break;
 
-		default:
+		default:puts("Opcion invalida");
 			break;
 	}
 
@@ -144,19 +174,20 @@ void insert_person (s_person **Head, char tname[], int year, int month, int day)
 }
 }		
 	
-void get_person (s_person **Headd){
+int get_person (s_person **Headd){
 	s_person *current = *Headd;
 	unsigned int cont = 0;
-	int a=0;
+	int total = 0;
 
 	while(current != NULL){
-		printf("Record: %d\nName: %s \nYear: %d \nMonth: %d \nDay: %d",current->record, current->name, current->birth_year, 			current->birth_month, current->birth_day);
+		printf("Entrada: %10d\nNombre: %11s \nAño de nac: %7d \nMes de nac: %7d \nDia de nac: %7d",current->record, current->name, 				current->birth_year,current->birth_month, current->birth_day);
 		puts("");
 		puts("");
 		current = current->nextPerson;
+		total++;
 	}
-
-
+	
+	return total;
 }
 
 void assign_current_day(s_current *current_date, struct tm my_time){
@@ -170,7 +201,8 @@ void get_nex_birth(int record, s_person *person,s_current date, s_nbirth *next_b
 		if(person == NULL){
 			puts("Aun no hay entradas en la lista");
 			return;
-}
+		}
+
 		s_person entry = *person;
 		unsigned int cont = 0;
 		int cur_y, cur_m, cur_d, u_y, u_m, u_d, p_y, p_m, p_d;
@@ -178,6 +210,7 @@ void get_nex_birth(int record, s_person *person,s_current date, s_nbirth *next_b
 		cur_y = date.current_year; //Store current date
 		cur_m = date.current_month;
 		cur_d = date.current_day;
+
 
 		while(cont++<record-1){
 			entry = *(entry.nextPerson);
@@ -209,13 +242,28 @@ void get_nex_birth(int record, s_person *person,s_current date, s_nbirth *next_b
 		next_birth->passed_days = p_d + p_m*30;
 		next_birth->comming_days = 365 - next_birth->passed_days;
 
-		printf("Record: %d\nName: %s \nYear: %d \nMonth: %d \nDay: %d",entry.record, entry.name, entry.birth_year, 			entry.birth_month, entry.birth_day);
+		printf("\nRecord: %15d\nNombre: %15s \nAño: %18d \nMes: %18d \nDia: %18d\n",entry.record, entry.name, entry.birth_year, 			entry.birth_month, entry.birth_day);
+		printf("Edad: %17d\nDias desde ultimo: %4d \nDias para proximo: %4d \n",next_birth->age, next_birth->passed_days, next_birth->comming_days);
 		puts("");
-		puts("");
+}
 
-		printf("Edad: %d\npassed days: %d \ncomming days: %d \n",next_birth->age, next_birth->passed_days, next_birth->comming_days);
-		puts("");
-		puts("");		
 
+int validate_num(const char *num, int min, int max) {
+	int val;
+	if(sscanf(num, "%d", &val)){//Formato de entrada válido
+		if(min<=val && val<=max){
+			return val;
+		}
+		else{
+			puts("Ingresaste un valor invalido");
+			return ERR_INPUT;		
+		}
+			
+
+	}
+	else{
+		puts("Ingresaste un valor incorrecto");
+		return ERR_INPUT;
+	}
 }
 
